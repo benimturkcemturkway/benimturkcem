@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Benim Türkçem - Kelime Ezber Oyunu</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --light: #ecf0f1;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--primary);
+        }
+
+        header {
+            text-align: center;
+            padding: 20px;
+            width: 100%;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .brand {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin: 0;
+        }
+
+        h1 {
+            margin: 10px 0;
+            font-size: 1.5rem;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+            font-size: 1rem;
+        }
+
+        .btn-main { background-color: var(--primary); color: white; }
+        .btn-success { background-color: var(--success); color: white; }
+
+        #game-container, #learned-container {
+            width: 90%;
+            max-width: 400px;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .progress {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: #34495e;
+        }
+
+        .word-display {
+            font-size: 2.2rem;
+            font-weight: bold;
+            margin: 30px 0;
+            text-transform: uppercase;
+            color: #2980b9;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .option-btn {
+            padding: 15px;
+            border: 2px solid var(--light);
+            border-radius: 10px;
+            background: white;
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+
+        .option-btn:active {
+            background-color: #f0f0f0;
+        }
+
+        #feedback {
+            margin-top: 20px;
+            font-weight: bold;
+            height: 24px;
+        }
+
+        .learned-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <p class="brand">@benim.turkcem.id</p>
+        <h1>Kelime Ezber Oyunu</h1>
+        <div class="nav-buttons">
+            <button class="btn-main" onclick="showSection('game')">Kelimeler</button>
+            <button class="btn-success" onclick="showSection('learned')">Ezberlendi</button>
+        </div>
+    </header>
+
+    <div id="game-container">
+        <div class="progress" id="progress-text">0 / 50</div>
+        <div class="word-display" id="target-word">YÜKLENİYOR...</div>
+        <div class="options" id="options-box">
+            </div>
+        <div id="feedback"></div>
+    </div>
+
+    <div id="learned-container" class="hidden">
+        <h3>Ezberlenen Kelimeler</h3>
+        <div id="learned-list"></div>
+        <button style="margin-top:20px; background:#bdc3c7;" onclick="clearData()">Listeyi Sıfırla</button>
+    </div>
+
+    <script>
+        const words = [
+            {tr:"Uyumak", correct:"tidur", wrong:"berlari"},
+            {tr:"Yemek", correct:"makan", wrong:"minum"},
+            {tr:"Gelmek", correct:"datang", wrong:"pergi"},
+            {tr:"Gitmek", correct:"pergi", wrong:"datang"},
+            {tr:"İçmek", correct:"minum", wrong:"makan"},
+            {tr:"Okumak", correct:"membaca", wrong:"menulis"},
+            {tr:"Yazmak", correct:"menulis", wrong:"membaca"},
+            {tr:"Koşmak", correct:"berlari", wrong:"berjalan"},
+            {tr:"Gülmek", correct:"tertawa", wrong:"menangis"},
+            {tr:"Ağlamak", correct:"menangis", wrong:"tertawa"},
+            {tr:"Anlamak", correct:"mengerti", wrong:"lupa"},
+            {tr:"Öğrenmek", correct:"belajar", wrong:"mengajar"},
+            {tr:"Çalışmak", correct:"bekerja", wrong:"bermain"},
+            {tr:"Oynamak", correct:"bermain", wrong:"bekerja"},
+            {tr:"Kalkmak", correct:"bangun", wrong:"duduk"},
+            {tr:"Oturmak", correct:"duduk", wrong:"bangun"},
+            {tr:"Açmak", correct:"membuka", wrong:"menutup"},
+            {tr:"Kapatmak", correct:"menutup", wrong:"membuka"},
+            {tr:"Almak", correct:"mengambil/membeli", wrong:"memberi"},
+            {tr:"Vermek", correct:"memberi", wrong:"mengambil"},
+            {tr:"Bakmak", correct:"melihat", wrong:"mendengar"},
+            {tr:"Dinlemek", correct:"mendengar", wrong:"melihat"},
+            {tr:"Konuşmak", correct:"berbicara", wrong:"diam"},
+            {tr:"Sevmek", correct:"mencintai", wrong:"membenci"},
+            {tr:"Korkmak", correct:"takut", wrong:"berani"},
+            {tr:"Beklemek", correct:"menunggu", wrong:"pergi"},
+            {tr:"Yardım etmek", correct:"membantu", wrong:"mengganggu"},
+            {tr:"Yüzmek", correct:"berenang", wrong:"terbang"},
+            {tr:"Uçmak", correct:"terbang", wrong:"berenang"},
+            {tr:"Pişirmek", correct:"memasak", wrong:"makan"},
+            {tr:"Yıkamak", correct:"mencuci", wrong:"mengotori"},
+            {tr:"Temizlemek", correct:"membersihkan", wrong:"merusak"},
+            {tr:"Bulmak", correct:"menemukan", wrong:"kehilangan"},
+            {tr:"Kaybetmek", correct:"kehilangan", wrong:"menemukan"},
+            {tr:"Sormak", correct:"bertanya", wrong:"menjawab"},
+            {tr:"Cevap vermek", correct:"menjawab", wrong:"bertanya"},
+            {tr:"Düşünmek", correct:"berpikir", wrong:"tidur"},
+            {tr:"Hatırlamak", correct:"ingat", wrong:"lupa"},
+            {tr:"Unutmak", correct:"lupa", wrong:"ingat"},
+            {tr:"Tanışmak", correct:"berkenalan", wrong:"berpisah"},
+            {tr:"Yaşamak", correct:"hidup", wrong:"mati"},
+            {tr:"Ölmek", correct:"mati", wrong:"hidup"},
+            {tr:"Başlamak", correct:"mulai", wrong:"selesai"},
+            {tr:"Bitirmek", correct:"mengakhiri", wrong:"mulai"},
+            {tr:"Hazırlamak", correct:"menyiapkan", wrong:"merusak"},
+            {tr:"Kullanmak", correct:"menggunakan", wrong:"membuang"},
+            {tr:"Seçmek", correct:"memilih", wrong:"melihat"},
+            {tr:"Gezmek", correct:"jalan-jalan", wrong:"bekerja"},
+            {tr:"Durmak", correct:"berhenti", wrong:"berjalan"},
+            {tr:"Görmek", correct:"melihat", wrong:"mendengar"}
+        ];
+
+        let currentIndex = 0;
+        let shuffledWords = [];
+        let learnedWords = JSON.parse(localStorage.getItem('learnedWords')) || [];
+
+        // Ses Efektleri (Browser Synthesizer)
+        function playSound(type) {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            if (type === 'correct') {
+                osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+                osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.1);
+            } else {
+                osc.frequency.setValueAtTime(150, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(50, ctx.currentTime + 0.2);
+            }
+
+            osc.start();
+            gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.2);
+            osc.stop(ctx.currentTime + 0.2);
+        }
+
+        function shuffle(array) {
+            return array.sort(() => Math.random() - 0.5);
+        }
+
+        function initGame() {
+            shuffledWords = shuffle([...words]);
+            currentIndex = 0;
+            showWord();
+            updateProgress();
+        }
+
+        function showWord() {
+            if (currentIndex >= shuffledWords.length) {
+                document.getElementById('game-container').innerHTML = "<h2>Tebrikler! Tüm kelimeleri tamamladınız.</h2>";
+                return;
+            }
+
+            const wordObj = shuffledWords[currentIndex];
+            document.getElementById('target-word').innerText = wordObj.tr;
+            document.getElementById('feedback').innerText = "";
+
+            const options = [
+                { text: wordObj.correct, isCorrect: true },
+                { text: wordObj.wrong, isCorrect: false }
+            ];
+            shuffle(options);
+
+            const optionsBox = document.getElementById('options-box');
+            optionsBox.innerHTML = "";
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt.text;
+                btn.onclick = () => checkAnswer(opt.isCorrect, wordObj);
+                optionsBox.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(isCorrect, wordObj) {
+            const feedback = document.getElementById('feedback');
+            if (isCorrect) {
+                feedback.innerText = "✔ Doğru!";
+                feedback.style.color = "var(--success)";
+                playSound('correct');
+                
+                if (!learnedWords.some(w => w.tr === wordObj.tr)) {
+                    learnedWords.push(wordObj);
+                    localStorage.setItem('learnedWords', JSON.stringify(learnedWords));
+                }
+
+                setTimeout(() => {
+                    currentIndex++;
+                    showWord();
+                    updateProgress();
+                }, 1000);
+            } else {
+                feedback.innerText = "❌ Yanlış!";
+                feedback.style.color = "var(--danger)";
+                playSound('wrong');
+            }
+        }
+
+        function updateProgress() {
+            document.getElementById('progress-text').innerText = `${learnedWords.length} / ${words.length} Kelime`;
+        }
+
+        function showSection(section) {
+            if (section === 'game') {
+                document.getElementById('game-container').classList.remove('hidden');
+                document.getElementById('learned-container').classList.add('hidden');
+            } else {
+                document.getElementById('game-container').classList.add('hidden');
+                document.getElementById('learned-container').classList.remove('hidden');
+                renderLearnedList();
+            }
+        }
+
+        function renderLearnedList() {
+            const listDiv = document.getElementById('learned-list');
+            listDiv.innerHTML = learnedWords.length === 0 ? "<p>Henüz kelime ezberlenmedi.</p>" : "";
+            learnedWords.forEach(w => {
+                const item = document.createElement('div');
+                item.className = 'learned-item';
+                item.innerHTML = `<span><b>${w.tr}</b></span> <span>${w.correct}</span>`;
+                listDiv.appendChild(item);
+            });
+        }
+
+        function clearData() {
+            if(confirm("Tüm ilerlemeniz silinecek. Emin misiniz?")) {
+                localStorage.removeItem('learnedWords');
+                learnedWords = [];
+                updateProgress();
+                renderLearnedList();
+                location.reload();
+            }
+        }
+
+        initGame();
+    </script>
+</body>
+</html>
